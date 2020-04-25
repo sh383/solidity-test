@@ -15,16 +15,37 @@ beforeEach (async () => {
         //await web3.eth.getAccounts().then(fetchedAccounts => {
         //})
 
-    //Use one of those accounts to deploy
-    //the contract
+    //Use one of those accounts to deploy the contract
     inbox = await new web3.eth.Contract(JSON.parse(interface))
-        .deploy({ data: bytecode, arguments: ['Hi there!']})
-        .send({ from: accounts[0], gas: '1000000' });
+    // Hi there 은 constructor function 의 argument 로 전달됨. constructor function 은 
+    // array 로 받을 수 있음
+        .deploy({
+            data: bytecode, 
+            arguments:['Hi there!']
+        })
+        .send({from: accounts[0], gas:'1000000'})
+
+    
 });
 
 describe('Inbox', () => {
     it('deploys a contract', () => {
-        console.log(inbox);
+        assert.ok(inbox.options.address);
+    })
+    it('has a default message', async () => {
+        //methods 는 contract 안에 있는 public functions 를 포함하는 object. 그 중에 message()를 호출
+        const message = await inbox.methods.message().call();
+        assert.equal(message, 'Hi there!');
+    })
+
+    it('can change the message', async () => {
+        //send a transaction
+        // 'await' 동시에 일어나는 것이 아니므로 기다리겠다.
+        // tx 를 보내지만 결과 값을 어떤 변수에도 할당하지 않겠다.tx hash 값만 반환되면
+        // tx 가 성공한 것으로 간주
+        await inbox.methods.setMessage('bye').send({from: accounts[0] });
+        const message = await inbox.methods.message().call();
+        assert.equal(message, 'bye');
     })
 })
 

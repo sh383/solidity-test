@@ -1,7 +1,13 @@
 const HDWalletProvider = require("truffle-hdwallet-provider");
 // ethereum 세상과 연결 고리. 정보를 가져오기도 하고 network에 변화를 주기도 함
 const Web3 = require("web3");
-const { interface, bytecode } = require("./compile");
+// const { interface, bytecode } = require("./compile");
+const compiledFile = require("./compile");
+
+const interface = compiledFile.abi;
+const bytecode = compiledFile.evm.bytecode.object;
+
+let accounts;
 
 // 어떤 계정을 unlock 할 것인가
 const provider = new HDWalletProvider(
@@ -19,9 +25,9 @@ const deploy = async () => {
 
   console.log("Attempting", accounts[0]);
   //result 는 contract 의 instance
-  const result = await new web3.eth.Contract(JSON.parse(interface))
-    .deploy({ data: "0x" + bytecode, arguments: ["Hi there!"] }) // add 0x bytecode
-    .send({ gas: 1000000, from: accounts[0] }); // remove 'gas'
+  const result = await new web3.eth.Contract(interface)
+    .deploy({ data: "0x" + bytecode }) // add 0x bytecode
+    .send({ gas: "1000000", from: accounts[0] }); // remove 'gas'
 
   console.log("Contract deployed to", result.options.address);
 };

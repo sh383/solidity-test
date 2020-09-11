@@ -12,7 +12,7 @@ const source = fs.readFileSync(campaignPath, "utf8");
 const input = {
   language: "Solidity",
   sources: {
-    Campaign: {
+    "Campaign.sol": {
       content: source,
     },
   },
@@ -24,10 +24,11 @@ const input = {
     },
   },
 };
-const output = JSON.parse(solc.compile(JSON.stringify(input))).contracts
-  .Campaign;
+const output = JSON.parse(solc.compile(JSON.stringify(input))).contracts[
+  "Campaign.sol"
+];
+// console.log(output);
 
-console.log(output);
 // build 폴더가 없으면 생성
 fs.ensureDirSync(buildPath);
 

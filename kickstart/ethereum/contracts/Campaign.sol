@@ -16,25 +16,28 @@ contract CampaignFactory {
 
 contract Campaign {
     struct Request {
-        string description;
-        uint256 value;
-        address payable recipient;
-        bool complete;
+        string description;         // Describes why the request is being created
+        uint256 value;              // Amounts of money that the manager wants to send to the vendor
+        address payable recipient;  // Address that money will be sent to
+        bool complete;              // True if the request has already been processed
         uint256 approvalCount;
+        mapping (address => bool) approvals;
     }
-    mapping(address => bool) approvals;
 
     address public manager;
     uint256 public minimumContribution;
     mapping(address => bool) public approvers;
     uint256 public approversCount;
-    Request[] public requests;
+    // Request[] public requests;
+    mapping(uint=> Request) public requestsMapping;
+    uint private currentIndex;
+    
 
     constructor(uint256 minimum, address creator) {
         manager = creator;
         minimumContribution = minimum;
     }
-
+    // Contract 에 돈을 보내는 경우 항상 payable
     function contribute() public payable {
         require(
             msg.value >= minimumContribution,
@@ -48,34 +51,33 @@ contract Campaign {
         string memory description,
         uint256 value,
         address payable recipient
-    ) public onlyManager {
-        Request memory newRequest = Request({
-            description: description,
-            value: value,
-            recipient: recipient,
-            complete: false,
-            approvalCount: 0
-        });
-        requests.push(newRequest);
+    )  public onlyManager {
+        Request storage newRequest = requestsMapping[currentIndex];
+        newRequest.description= description;
+        newRequest.value= value;
+        newRequest.recipient= recipient;
+        newRequest.complete= false;
+        newRequest.approvalCount= 0;
+        currentIndex++;
     }
 
     function approveRequest(uint256 index) public {
-        Request storage request = requests[index];
+        Request storage request = requestsMapping[index];
         require(
             approvers[msg.sender],
             "Only contributors can approve a specific payment request"
         );
         require(
-            !approvals[msg.sender],
+            !request.approvals[msg.sender], // request 마다 approvals mapping 이 존재하고 그 안에서 msg.sender 를 체크 
             "You have already voted to approve this request"
         );
 
-        approvals[msg.sender] = true;
+        request.approvals[msg.sender] = true;
         request.approvalCount++;
     }
 
     function finalizeRequest(uint256 index) public onlyManager {
-        Request storage request = requests[index];
+        Request storage request = requestsMapping[index];
         require(
             request.approvalCount > (approversCount / 2),
             "This request needs more approvals before it can be finalized"

@@ -28,7 +28,8 @@ contract Campaign {
     uint256 public minimumContribution;
     mapping(address => bool) public approvers;
     uint256 public approversCount;
-    // Request[] public requests;
+
+    // Instead of using 'Request[] public requests'
     mapping(uint=> Request) public requestsMapping;
     uint private currentIndex;
     
@@ -51,7 +52,7 @@ contract Campaign {
         string memory description,
         uint256 value,
         address payable recipient
-    )  public onlyManager {
+    )  payable public onlyManager {
         Request storage newRequest = requestsMapping[currentIndex];
         newRequest.description= description;
         newRequest.value= value;
